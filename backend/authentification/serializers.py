@@ -1,9 +1,10 @@
 from rest_framework import serializers
 from .models import User
 class UserSerializer(serializers.ModelSerializer):
+	status = serializers.SerializerMethodField()
 	class Meta:
 		model = User
-		fields =['id','username','password']
+		fields =['id','username','password','status']
 		extra_kwargs = {
 			'password':{'write_only':True}
 		}
@@ -15,3 +16,6 @@ class UserSerializer(serializers.ModelSerializer):
 			instance.set_password(password)
 		instance.save()
 		return instance
+	def get_status(self,obj):
+		return str(obj.status.name) if obj.status else None
+	
