@@ -38,3 +38,22 @@ class Video_Serializer(serializers.ModelSerializer):
 		return "http://127.0.0.1:8000"+str(obj.thumbnail.url) if obj.thumbnail else None
 	def get_video(self,obj):
 		return "http://127.0.0.1:8000"+str(obj.video.url) if obj.video else None
+	
+
+class Watch_History_Serializer(serializers.ModelSerializer):
+	course = serializers.SerializerMethodField()
+	user = serializers.SerializerMethodField()
+	class Meta:
+		model = Watch_History
+		fields = ['course','user']
+	
+	def get_user(self,obj):
+		return str(obj.user.username) if obj.user else None
+	
+	def get_course(self,obj):
+		if obj.course:
+			data = Course_Serializer(obj.course)
+			return data.data
+		else:
+			return str("sorry nothin")
+

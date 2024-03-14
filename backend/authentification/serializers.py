@@ -18,4 +18,3 @@ class UserSerializer(serializers.ModelSerializer):
 		return instance
 	def get_status(self,obj):
 		return str(obj.status.name) if obj.status else None
-	

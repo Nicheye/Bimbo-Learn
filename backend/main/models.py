@@ -2,7 +2,7 @@ from django.db import models
 from authentification.models import User
 # Create your models here.
 class Course(models.Model):
-	name = models.CharField(max_length=100)
+	name = models.CharField(max_length=100,unique=True)
 	created_by = models.ForeignKey(User,on_delete=models.CASCADE)
 	created_at = models.DateField(auto_now_add=True)
 	image =models.ImageField(upload_to="media/course_images")
@@ -21,3 +21,8 @@ class Video(models.Model):
 	video = models.FileField(upload_to="media/videos",null=True,blank=True)
 	url_video = models.CharField(max_length=2000,null=True,blank=True)
 	description = models.TextField(max_length=1000)
+
+class Watch_History(models.Model):
+	course = models.ForeignKey(Course,on_delete=models.CASCADE)
+	user = models.ForeignKey(User,on_delete=models.CASCADE)
+
