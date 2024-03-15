@@ -134,7 +134,7 @@ class Video_View(APIView):
           
 class Playlist_View(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self,request,*args,**kwargs):
+    def post(self,request,*args,**kwargs):
         user =request.user
         if str(user.status) == 'consumer':
             playlist_id = kwargs.get("playlist_id",None)
@@ -156,8 +156,40 @@ class Playlist_View(APIView):
                             playlist_obj = Playlist_Video.objects.create(video=video,playlist=playlist_obj)
                         return Response({'message':"course has added to playlist"},status=status.HTTP_201_CREATED)
                 return Response({"message":"you re not allowed to edit other people`s playlists"},status=status.HTTP_400_BAD_REQUEST)
+            else:
+                data = request.data
+                new_playlist = Playlist_serialier(data)
+                if new_playlist.is_valid(raise_exception=True):
+                    new_playlist.save(created_by=user)
+                    return Response({"data":new_playlist.data})
         else:
             return Response({"message":"why do u need a playlist if youre creator "},status=status.HTTP_400_BAD_REQUEST)
-          
-               
+    
+            
+    def get(self,request,*args,**kwargs):
+        user =request.user
+        playlist_id = kwargs.get("playlist_id",None)
+        if playlist_id is not None:
+            playlist_obj = Playlist.objects.get(id=playlist_obj)
+            if playlist_obj.is_public == True or playlist_obj.created_by == user:
+                playlist_ser = Playlist_serialier(playlist_obj)
+                return Response({'data':playlist_ser.data})
+            else:
+                return Response({"message":"you have no permission to this playlist "},status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self,request,*args,**kwargs):
+        user =request.user
+        playlist_id = kwargs.get("playlist_id",None)
+        if playlist_id is not None:
+            playlist_obj = Playlist.objects.get(id=playlist_obj)
+            if  playlist_obj.created_by == user:
+                data =request.data
+                playlist_ser = Playlist_serialier(playlist_obj,data=data)
+                if playlist_ser.is_valid(raise_exception=True):
+                    playlist_ser.save()
+                return Response({'data':playlist_ser.data})
+            else:
+                return Response({"message":"you have no permission to edit this playlist"},status=status.HTTP_400_BAD_REQUEST)
+
+            
 	
