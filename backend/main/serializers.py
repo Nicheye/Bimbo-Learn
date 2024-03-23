@@ -33,13 +33,16 @@ class Tag_Serializer(serializers.ModelSerializer):
 class Tag_Link_Serializer(serializers.ModelSerializer):
 	course =serializers.SerializerMethodField()
 	tag = serializers.SerializerMethodField()
+	color = serializers.SerializerMethodField()
 	class Meta:
 		model = Tag_Link
-		fields= ['course','tag','id']
+		fields= ['course','tag','id','color']
 	def get_course(self,obj):
 		return str(obj.course.name) if obj.course else None
 	def get_tag(self,obj):
 		return str(obj.tag.name) if obj.tag else None
+	def get_color(self,obj):
+		return str(obj.tag.color) if obj.tag else None
 
 class Video_Serializer(serializers.ModelSerializer):
 	thumbnail = serializers.SerializerMethodField()
@@ -88,8 +91,8 @@ class Playlist_video_serializer(serializers.ModelSerializer):
 			return str(obj.playlist.name)
 	def get_video(self,obj):
 		if obj.video:
-			video_ser = Video_Serializer(obj.video)
-			return video_ser.data
+			video_ser = Video_Serializer(obj.video) 
+			return video_ser.data 
 
 class Playlist_serialier(serializers.ModelSerializer):
 	created_by= serializers.SerializerMethodField()
@@ -103,6 +106,6 @@ class Playlist_serialier(serializers.ModelSerializer):
 		else:
 			return ""
 	def get_videos(self,obj):
-		videos = Playlist_Video.objects.filter(playlist=obj)
-		videos_ser = Playlist_serialier(videos,many=True)
+		videos = Playlist_Video.objects.filter(playlist=obj).order_by('-id')
+		videos_ser = Playlist_video_serializer(videos,many=True)
 		return videos_ser.data

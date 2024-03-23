@@ -29,20 +29,20 @@ class Profile_View(APIView):
             if str(user_obj.status) == "consumer":
                 watched_courses = Watch_History.objects.filter(user=user_obj)
                 watched_ser = Watch_History_Serializer(watched_courses, many=True)
-                return Response({'data': watched_ser.data}, status=status.HTTP_200_OK)
+                return Response({'data': watched_ser.data,'status':'consumer'}, status=status.HTTP_200_OK)
             elif str(user_obj.status) == "creator":
                 made_courses = Course.objects.filter(created_by=user_obj)
                 made_ser = Course_Serializer(made_courses, many=True)
-                return Response({'data': made_ser.data}, status=status.HTTP_200_OK)
+                return Response({'data': made_ser.data,'status':'creator'}, status=status.HTTP_200_OK)
 
         if str(user.status) == "consumer":
             watched_courses = Watch_History.objects.filter(user=user)
             watched_ser = Watch_History_Serializer(watched_courses, many=True)
-            return Response({'data': watched_ser.data}, status=status.HTTP_200_OK)
+            return Response({'data': watched_ser.data,'status':'consumer'}, status=status.HTTP_200_OK)
         elif str(user.status) == "creator":
             made_courses = Course.objects.filter(created_by=user)
             made_ser = Course_Serializer(made_courses, many=True)
-            return Response({'data': made_ser.data}, status=status.HTTP_200_OK)
+            return Response({'data': made_ser.data,'status':'creator'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': "who the hell are you"}, status=status.HTTP_510_NOT_EXTENDED)
 
@@ -70,7 +70,7 @@ class Course_View(APIView):
                 course_obj = Course.objects.get(id=id)
                 obj_ser= Course_Serializer(course_obj)
                 
-                return Response({'data':obj_ser.data},status=status.HTTP_200_OK)
+                return Response({'data':obj_ser.data,'user':str(request.user)},status=status.HTTP_200_OK)
                except Exception as e:
                     return Response({'message':str(e)},status=status.HTTP_400_BAD_REQUEST)
           else:
@@ -98,7 +98,16 @@ class Course_View(APIView):
               except Exception as e:
                     return Response({'message':str(e)},status=status.HTTP_400_BAD_REQUEST)
          else:
-            return Response({'message':"you havent provided id for course to create smth"},status=status.HTTP_400_BAD_REQUEST)
+            if str(user.status) =='creator':
+                try:
+                    data =request.data
+                    image = request.FILES.get('image')
+                    ser= Course_Serializer(data=data)
+                    if ser.is_valid(raise_exception=True):
+                        ser.save(image=image,created_by=user)
+                        return Response({"data":ser.data},status=status.HTTP_201_CREATED)
+                except Exception as e:
+                    return Response({"message":str(e)})
         
 class Watch_History_View(APIView):
      permission_classes = [IsAuthenticated,]
@@ -125,7 +134,11 @@ class Video_View(APIView):
                 video_ser = Video_Serializer(video_obj)
                 user = request.user
                 if str(user.status) == 'consumer':
-                    watch_obj = Watch_History.objects.create(user=user,video=video_obj)
+                    try:
+                        instance = Watch_History.objects.get(user=user,video=video_obj)
+                        
+                    except:
+                        watch_obj = Watch_History.objects.create(user=user,video=video_obj)
                 return Response({'data':video_ser.data})
             else:
                 return Response({'message':"you havent provided any id to get video"},status=status.HTTP_400_BAD_REQUEST)
@@ -141,19 +154,20 @@ class Playlist_View(APIView):
             if playlist_id is not None:
                 playlist_obj = Playlist.objects.get(id=playlist_id)
                 if playlist_obj.created_by == user:
-                    video_id = kwargs.get("playlist_id",None)
-                    
+                    video_id = kwargs.get("video_id",None)
+                    course_id = kwargs.get("course_id",None)
                     if video_id is not None:
-
+                        print("video added")
                         video_obj = Video.objects.get(id=video_id)
                         playlist_obj = Playlist_Video.objects.create(video=video_obj,playlist=playlist_obj)
                         return Response({'message':"video has added to playlist"},status=status.HTTP_201_CREATED)
-                    course_id = kwargs.get("course_id",None)
+                    
                     if course_id is not None:
+                        print("course added")
                         course_obj = Course.objects.get(id=course_id)
                         videos = Video.objects.filter(course=course_obj)
-                        for video in videos:
-                            playlist_obj = Playlist_Video.objects.create(video=video,playlist=playlist_obj)
+                        playlist_videos = [Playlist_Video(video=video, playlist=playlist_obj) for video in videos]
+                        Playlist_Video.objects.bulk_create(playlist_videos)
                         return Response({'message':"course has added to playlist"},status=status.HTTP_201_CREATED)
                 return Response({"message":"you re not allowed to edit other people`s playlists"},status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -176,7 +190,10 @@ class Playlist_View(APIView):
                 return Response({'data':playlist_ser.data})
             else:
                 return Response({"message":"you have no permission to this playlist "},status=status.HTTP_400_BAD_REQUEST)
-    
+        else:
+            playlists = Playlist.objects.filter(created_by=user)
+            playlists_ser = Playlist_serialier(playlists,many=True)
+            return Response({"data":playlists_ser.data})
     def patch(self,request,*args,**kwargs):
         user =request.user
         playlist_id = kwargs.get("playlist_id",None)

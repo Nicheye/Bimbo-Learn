@@ -10,9 +10,11 @@ urlpatterns = [
     path('profile/<int:id>',Profile_View.as_view()),
 	path('profile',Profile_View.as_view()),
 	path('course/<int:id>',Course_View.as_view()),
+	path('course',Course_View.as_view()),
+	path('video/<int:id>',Video_View.as_view()),
 	path('watch_history',Watch_History_View.as_view()),
-	path('playlist/<int:playlist_id>/<int:video_id>',Playlist_View.as_view()),
-	path('playlist/<int:playlist_id>/<int:course_id>',Playlist_View.as_view()),
+	path('playlist/<int:playlist_id>/video/<int:video_id>',Playlist_View.as_view()),
+	path('playlist/<int:playlist_id>/course/<int:course_id>',Playlist_View.as_view()),
 	path('playlist/<int:playlist_id>',Playlist_View.as_view()),
 	path('playlist',Playlist_View.as_view()),
 ]

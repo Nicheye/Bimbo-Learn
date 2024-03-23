@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-f-i**%#j=-ru!9a0e43!28uj%^nqj0qh%=rmpyb1uno!l$e7y_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+	
 ]
 
 ROOT_URLCONF = 'backendmusic.urls'
@@ -174,3 +175,4 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 AUTH_USER_MODEL =  'authentification.User'
+CSRF_COOKIE_HTTPONLY = False

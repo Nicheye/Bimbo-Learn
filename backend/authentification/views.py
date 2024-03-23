@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from .serializers import UserSerializer
+from .models import Status
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+import requests
 class HomeView(APIView):
    permission_classes = (IsAuthenticated, )
    def get(self, request):
@@ -24,7 +26,12 @@ class LogoutView(APIView):
 from rest_framework.views import APIView
 class RegisterView(APIView):
 	def post(self,request):
-		serializer =  UserSerializer(data=request.data)
-		serializer.is_valid(raise_exception=True)
-		serializer.save()
-		return Response(serializer.data)
+               status= Status.objects.get(name=request.data['status'])
+               serializer =  UserSerializer(data=request.data)
+               serializer.is_valid(raise_exception=True)
+               serializer.save(status=status)
+               payload = {'username': serializer.data['username'], 'password': request.data['password']}
+
+               r = requests.post('http://127.0.0.1:8000/token/', data=payload)
+               
+               return Response(r)
